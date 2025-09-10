@@ -7,12 +7,13 @@ import {
   Image,
   Dimensions,
   Animated,
+  Modal,
 } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import { Colors } from '../constants/Colors';
 import { Layout } from '../constants/Layout';
 import { Video as VideoType } from '../lib/mock';
-import { updateVideoLike, updateVideoView } from '../lib/api';
+import { videoStatsService } from '../lib/supabase';
 
 interface VideoTileProps {
   video: VideoType;
@@ -32,6 +33,8 @@ export const VideoTile: React.FC<VideoTileProps> = ({
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(video.likes);
   const [viewCount, setViewCount] = useState(video.views);
+  const [commentCount, setCommentCount] = useState(video.comments);
+  const [showCommentModal, setShowCommentModal] = useState(false);
   const heartScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -41,8 +44,8 @@ export const VideoTile: React.FC<VideoTileProps> = ({
       // 비디오가 재생될 때 조회수 증가
       setViewCount(prev => prev + 1);
       
-      // 서버에 조회수 업데이트 전송
-      updateVideoView(video.id).catch(error => {
+      // Supabase에 조회수 업데이트 전송
+      videoStatsService.incrementView(video.id).catch(error => {
         console.error('조회수 업데이트 실패:', error);
       });
     } else if (!isActive && isPlaying) {
@@ -82,16 +85,25 @@ export const VideoTile: React.FC<VideoTileProps> = ({
       }),
     ]).start();
 
-    // 서버에 좋아요 상태 전송
+    // Supabase에 좋아요 상태 전송
     try {
-      await updateVideoLike(video.id, newLikedState);
-      console.log(`비디오 ${video.id} 좋아요 상태: ${newLikedState}`);
+      const result = await videoStatsService.toggleLike(video.id, 'test-user-id');
+      console.log(`비디오 ${video.id} 좋아요 상태: ${result.isLiked}, 좋아요 수: ${result.likeCount}`);
+      // Supabase에서 받은 실제 좋아요 수로 업데이트
+      setLikeCount(result.likeCount);
     } catch (error) {
       console.error('좋아요 업데이트 실패:', error);
       // 실패 시 상태 롤백
       setIsLiked(!newLikedState);
       setLikeCount(prev => newLikedState ? prev - 1 : prev + 1);
     }
+  };
+
+  const handleComment = () => {
+    console.log('댓글 버튼 클릭됨:', video.id);
+    console.log('현재 모달 상태:', showCommentModal);
+    setShowCommentModal(true);
+    console.log('모달 상태 변경됨:', true);
   };
 
   return (
@@ -142,6 +154,15 @@ export const VideoTile: React.FC<VideoTileProps> = ({
               </Animated.Text>
               <Text style={styles.likeCount}>{likeCount.toLocaleString()}</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.commentContainer}
+              onPress={handleComment}
+              accessibilityRole="button"
+              accessibilityLabel="댓글"
+            >
+              <Text style={styles.commentIcon}>💬</Text>
+              <Text style={styles.commentCount}>{commentCount.toLocaleString()}</Text>
+            </TouchableOpacity>
           </View>
           
           <TouchableOpacity
@@ -156,6 +177,46 @@ export const VideoTile: React.FC<VideoTileProps> = ({
           </TouchableOpacity>
         </View>
       </View>
+      
+      {/* 댓글 모달 */}
+      {showCommentModal && (
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+        }}>
+          <View style={{
+            backgroundColor: 'white',
+            padding: 20,
+            borderRadius: 10,
+            width: '80%',
+            height: '60%',
+          }}>
+            <Text style={{ fontSize: 18, marginBottom: 20 }}>댓글 모달 테스트</Text>
+            <Text>비디오 ID: {video.id}</Text>
+            <Text>좋아요 수: {likeCount}</Text>
+            <Text>조회수: {viewCount}</Text>
+            <Text>댓글 수: {commentCount}</Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'red',
+                padding: 10,
+                borderRadius: 5,
+                marginTop: 20,
+              }}
+              onPress={() => setShowCommentModal(false)}
+            >
+              <Text style={{ color: 'white' }}>닫기</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
@@ -217,6 +278,22 @@ const styles = StyleSheet.create({
     marginRight: Layout.spacing.xs,
   },
   likeCount: {
+    fontSize: Layout.fontSize.sm,
+    color: Colors.text.inverse,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  commentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Layout.spacing.xs,
+  },
+  commentIcon: {
+    fontSize: Layout.fontSize.md,
+    marginRight: Layout.spacing.xs,
+  },
+  commentCount: {
     fontSize: Layout.fontSize.sm,
     color: Colors.text.inverse,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',

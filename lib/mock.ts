@@ -45,6 +45,7 @@ export interface Video {
   duration: number;
   views: number;
   likes: number;
+  comments: number;
   clinicId?: string;
   tags: string[];
   createdAt: string;
@@ -149,7 +150,7 @@ export const mockReviews: Review[] = [
   },
 ];
 
-// Mock 비디오 데이터
+// Mock 비디오 데이터 (모든 카운트 0으로 초기화)
 export const mockVideos: Video[] = [
   {
     id: '1',
@@ -158,8 +159,9 @@ export const mockVideos: Video[] = [
     thumbnail: 'https://picsum.photos/300/400?random=21',
     videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
     duration: 120,
-    views: 15420,
-    likes: 892,
+    views: 0,
+    likes: 0,
+    comments: 0,
     clinicId: '1',
     tags: ['보톡스', '후기', '강남'],
     createdAt: '2024-01-10T14:00:00Z',
@@ -171,8 +173,9 @@ export const mockVideos: Video[] = [
     thumbnail: 'https://picsum.photos/300/400?random=22',
     videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
     duration: 180,
-    views: 8930,
-    likes: 456,
+    views: 0,
+    likes: 0,
+    comments: 0,
     clinicId: '2',
     tags: ['필러', '시술과정', '압구정'],
     createdAt: '2024-01-08T11:30:00Z',
@@ -184,8 +187,9 @@ export const mockVideos: Video[] = [
     thumbnail: 'https://picsum.photos/300/400?random=23',
     videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     duration: 90,
-    views: 12300,
-    likes: 678,
+    views: 0,
+    likes: 0,
+    comments: 0,
     clinicId: '1',
     tags: ['레이저', '치료', '효과'],
     createdAt: '2024-01-05T16:45:00Z',

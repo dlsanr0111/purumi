@@ -1,6 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, FlatList, Animated, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, FlatList, Animated, TextInput, Linking } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
+import NewSignupForm from './components/NewSignupForm';
+import SignupCelebration from './components/SignupCelebration';
 
 // Mock 데이터
 const mockClinics = [
@@ -37,11 +39,13 @@ const mockClinics = [
 ];
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState('splash');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // 로그인 상태 (임시로 false)
-  const [activeTab, setActiveTab] = useState('main'); // 하단 네비게이션 활성 탭
+  const [currentScreen, setCurrentScreen] = useState<string>('splash');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false); // 로그인 상태 (임시로 false)
+  const [activeTab, setActiveTab] = useState<string>('main'); // 하단 네비게이션 활성 탭
   const [expandedDescriptions, setExpandedDescriptions] = useState<{[key: number]: boolean}>({});
+  const [signupData, setSignupData] = useState<any>(null);
+  
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const fadeOutAnim = useRef(new Animated.Value(1)).current;
 
@@ -104,6 +108,7 @@ export default function App() {
     }
   };
 
+
   const toggleDescription = (itemId: number) => {
     setExpandedDescriptions(prev => ({
       ...prev,
@@ -128,13 +133,13 @@ export default function App() {
       {bottomTabs.map((tab) => (
         <TouchableOpacity
           key={tab.id}
-          style={[styles.tabItem, activeTab === tab.id && styles.activeTabItem]}
+          style={[styles.tabItem, (activeTab === tab.id) && styles.activeTabItem]}
           onPress={() => handleTabPress(tab.id)}
         >
-          <Text style={[styles.tabIcon, activeTab === tab.id && styles.activeTabIcon]}>
+          <Text style={[styles.tabIcon, (activeTab === tab.id) && styles.activeTabIcon]}>
             {tab.icon}
           </Text>
-          <Text style={[styles.tabLabel, activeTab === tab.id && styles.activeTabLabel]}>
+          <Text style={[styles.tabLabel, (activeTab === tab.id) && styles.activeTabLabel]}>
             {tab.title}
           </Text>
         </TouchableOpacity>
@@ -144,7 +149,7 @@ export default function App() {
 
   const screens = {
     splash: (
-      <Animated.View style={[styles.splashContainer, { opacity: Animated.multiply(fadeAnim, fadeOutAnim) }]}>
+      <Animated.View style={[styles.splashContainer, { opacity: fadeAnim }]}>
         <View style={styles.logoContainer}>
           <Text style={styles.logo}>Purumi</Text>
           <Text style={styles.tagline}>당신을 위한 투명한 리뷰</Text>
@@ -194,7 +199,7 @@ export default function App() {
           
           <TouchableOpacity 
             style={styles.signupButton}
-            onPress={() => console.log('회원가입')}
+            onPress={() => setCurrentScreen('signup')}
           >
             <Text style={styles.signupButtonText}>회원가입</Text>
           </TouchableOpacity>
@@ -210,6 +215,26 @@ export default function App() {
           </TouchableOpacity>
         </View>
       </View>
+    ),
+    signup: (
+      <NewSignupForm
+        onComplete={(data) => {
+          console.log('회원가입 완료:', data);
+          setSignupData(data);
+          setCurrentScreen('signup-celebration');
+        }}
+        onBack={() => setCurrentScreen('login')}
+        onShowCelebration={() => setCurrentScreen('signup-celebration')}
+      />
+    ),
+    'signup-celebration': (
+      <SignupCelebration
+        onComplete={() => {
+          console.log('회원가입 데이터:', signupData);
+          setSignupData(null);
+          setCurrentScreen('login');
+        }}
+      />
     ),
     clinics: (
       <View style={styles.container}>
@@ -595,9 +620,6 @@ const styles = StyleSheet.create({
   },
   headerIconText: {
     fontSize: 20,
-  },
-  backButton: {
-    padding: 8,
   },
   backIcon: {
     fontSize: 24,
@@ -1056,6 +1078,236 @@ const styles = StyleSheet.create({
   followButtonText: {
     color: 'white',
     fontSize: 12,
+    fontWeight: '600',
+  },
+
+  // 회원가입 스타일
+  signupContainer: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  signupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: '#374151',
+  },
+  signupTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  stepIndicator: {
+    backgroundColor: '#88C8C3',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  stepText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  signupProgress: {
+    height: 4,
+    backgroundColor: '#e5e7eb',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#88C8C3',
+  },
+  signupContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  stepContainer: {
+    paddingVertical: 40,
+  },
+  stepTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  stepSubtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    marginBottom: 40,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  nextButton: {
+    backgroundColor: '#88C8C3',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  nextButtonDisabled: {
+    backgroundColor: '#d1d5db',
+  },
+  nextButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  resendButton: {
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  resendButtonText: {
+    color: '#88C8C3',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  checkboxContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  checkboxSelected: {
+    borderColor: '#88C8C3',
+    backgroundColor: '#f0fdfa',
+  },
+  checkboxText: {
+    fontSize: 16,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  confirmContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 40,
+  },
+  confirmItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  confirmLabel: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  confirmValue: {
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '600',
+  },
+  areasGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 40,
+  },
+  areaCard: {
+    width: '48%',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    position: 'relative',
+  },
+  areaCardSelected: {
+    borderColor: '#88C8C3',
+    backgroundColor: '#f0fdfa',
+  },
+  areaIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  areaName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  areaDescription: {
+    fontSize: 12,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  checkmark: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#88C8C3',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmarkText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  completeContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  completeIcon: {
+    fontSize: 64,
+    marginBottom: 20,
+  },
+  completeTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  completeSubtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  completeButton: {
+    backgroundColor: '#88C8C3',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 40,
+    alignItems: 'center',
+  },
+  completeButtonText: {
+    color: 'white',
+    fontSize: 18,
     fontWeight: '600',
   },
 });

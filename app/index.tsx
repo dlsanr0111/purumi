@@ -1,42 +1,44 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
+import React from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { useAuth } from '../providers/AuthProvider';
+import { Colors } from '../constants/Colors';
+import { Layout } from '../constants/Layout';
 
-export default function SplashScreen() {
-  useEffect(() => {
-    // 2초 후 자동으로 /clinics로 이동
-    const timer = setTimeout(() => {
-      router.replace('/clinics');
-    }, 2000);
+export default function IndexScreen() {
+  const { loading } = useAuth();
 
-    return () => clearTimeout(timer);
-  }, []);
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Purumi</Text>
+        <ActivityIndicator size="large" color={Colors.primary[500]} style={styles.loader} />
+        <Text style={styles.subtitle}>로딩 중...</Text>
+      </View>
+    );
+  }
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.logo}>Purumi</Text>
-      <Text style={styles.tagline}>뷰티 클리닉 검색의 새로운 기준</Text>
-    </View>
-  );
+  // AuthProvider에서 자동으로 라우팅 처리
+  return null;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#88C8C3',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background.primary,
   },
-  logo: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 16,
+  title: {
+    fontSize: Layout.fontSize.xxl,
+    fontWeight: '700',
+    color: Colors.primary[500],
+    marginBottom: Layout.spacing.xl,
   },
-  tagline: {
-    fontSize: 16,
-    color: 'white',
-    opacity: 0.9,
-    textAlign: 'center',
+  loader: {
+    marginBottom: Layout.spacing.lg,
+  },
+  subtitle: {
+    fontSize: Layout.fontSize.md,
+    color: Colors.text.secondary,
   },
 });

@@ -56,4 +56,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
   ],
+  extra: {
+    supabaseUrl: 'https://iaeadujcimzpkzfwsqwr.supabase.co',
+    supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhZWFkdWpjaW16cGt6ZndzcXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0MDQwODIsImV4cCI6MjA3Mjk4MDA4Mn0.CvxRL_tqq2qtTaqE_eZItividP4Liu37rLs9zP-Bqcw',
+  },
 });
